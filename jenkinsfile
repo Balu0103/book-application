@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    tools {
+        maven 'Maven'
+    }
+    stages{
+        stage('Build Maven'){
+            steps{
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Balu0103/book-application']])
+                bat 'mvn clean install'
+            }
+        }
+        stage('Build docker image'){
+            steps{
+                script{
+                    bat 'docker build -t bala/book-application .'
+                }
+            }
+        }
+        stage('Push image to Hub'){
+            steps{
+                script{
+                    withCredentials([string(credentialsId: 'dockerhubpwd', variable: 'dockerhubpwd')]) {
+                        bat 'docker login -u balu0103 -p ${dockerhubpwd}'
+                    }
+                    bat 'docker push balu0103/book-application'
+                }
+            }
+        }
+    }
+}
